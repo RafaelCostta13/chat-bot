@@ -1,0 +1,5 @@
+# Credenciais gerais do projeto
+.env
+
+# Configurações e credenciais do WAHA
+waha-config/
