@@ -1,0 +1,79 @@
+services:
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: chatbot-n8n
+
+    ports:
+      - "5678:5678"
+
+    environment:
+      - TZ=America/Sao_Paulo
+      - GENERIC_TIMEZONE=America/Sao_Paulo
+      - N8N_SECURE_COOKIE=false
+
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+    restart: unless-stopped
+
+    networks:
+      - chatbot-network
+
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: chatbot-ngrok
+
+    command:
+      - "http"
+      - "http://n8n:5678"
+
+    environment:
+      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
+
+    ports:
+      - "4040:4040"
+
+    depends_on:
+      - n8n
+
+    restart: unless-stopped
+
+    networks:
+      - chatbot-network
+
+
+  waha:
+    image: devlikeapro/waha:latest
+    container_name: chatbot-waha
+
+    ports:
+      - "3001:3000"
+
+    env_file:
+      - ./waha-config/.env
+
+    environment:
+      - TZ=America/Sao_Paulo
+      - WAHA_WORKER_ID=chatbot-waha
+
+    volumes:
+      - waha_sessions:/app/.sessions
+
+    restart: unless-stopped
+
+    networks:
+      - chatbot-network
+
+
+volumes:
+
+  n8n_data:
+  waha_sessions:
+
+
+networks:
+
+  chatbot-network:
+    driver: bridge
